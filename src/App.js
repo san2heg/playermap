@@ -5,9 +5,7 @@ import './App.css';
 class Map extends Component {
   render() {
     return (
-      <div>
-        <img src="images/us-canada-map.svg" />
-      </div>
+      <img id="map" src="images/us-canada-map.svg" />
     );
   }
 }
@@ -41,17 +39,15 @@ class App extends Component {
 
   render() {
     return (
-      <div>
+      <div className="container">
         <div className="title-container">
           <h1>NBA Player Map</h1>
         </div>
-        <div className="container">
-          <div className="map-container">
-            <Map year={this.state.year}/>
-          </div>
-          <div className="select-container">
-            <YearSelector year={this.state.year} onYearChanged={this.adjustYear}/>
-          </div>
+        <div className="map-container">
+          <Map year={this.state.year}/>
+        </div>
+        <div className="select-container">
+          <YearSelector year={this.state.year} onYearChanged={this.adjustYear}/>
         </div>
       </div>
     );
