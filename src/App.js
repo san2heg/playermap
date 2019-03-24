@@ -8,8 +8,9 @@ import MapSVG from './MapSVG.js';
 
 class Node extends Component {
   render() {
+    // Apply translation transformations with offset
     const style = {
-      transform: `translate(${this.props.left}px, ${this.props.top}px)`
+      transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px)`
     };
 
     return (
@@ -41,6 +42,8 @@ class Map extends Component {
 
   render() {
     let teamElements = [];
+
+    // Populate list of nodes representing each team
     for (let key in TEAM_LOC_MAP) {
       let stateElem = document.getElementById(TEAM_LOC_MAP[key]['svg-id']);
       if (stateElem == null) {
@@ -49,7 +52,12 @@ class Map extends Component {
       let rect = stateElem.getBoundingClientRect();
       let imgPath = `/images/logos/${key}.svg`;
 
-      teamElements.push(<Node key={imgPath} top={rect.top} left={rect.left} imgpath={imgPath} />);
+      let [xFrac, yFrac] = [TEAM_LOC_MAP[key]['offset-x'], TEAM_LOC_MAP[key]['offset-y']];
+
+      let offsetX = xFrac == null ? 0 : xFrac * rect.width;
+      let offsetY = yFrac == null ? 0 : yFrac * rect.height;
+
+      teamElements.push(<Node key={imgPath} top={rect.top} left={rect.left} offsetX={offsetX} offsetY={offsetY} imgpath={imgPath} />);
     }
 
     return (
@@ -82,6 +90,7 @@ class App extends Component {
     this.adjustYear = this.adjustYear.bind(this);
   }
 
+  // Adjust year with offset value
   adjustYear(offset) {
     this.setState(state => ({
       'year': state.year + offset
