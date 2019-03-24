@@ -24,26 +24,29 @@ class Node extends Component {
 class Map extends Component {
   constructor(props) {
     super(props);
-    this.onResize = this.onResize.bind(this);
+    this.reRender = this.reRender.bind(this);
   }
 
   componentDidMount() {
     this.setState({state: this.state});
-    window.addEventListener('resize', this.onResize);
+    window.addEventListener('resize', this.reRender);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('resize', this.reRender);
   }
 
-  onResize() {
+  reRender() {
     this.setState({state: this.state});
   }
 
+  // Render three times:
+  // 1. map-container
+  // 2. MapSVG
+  // 3. Nodes
   render() {
-    let teamElements = [];
-
     // Populate list of nodes representing each team
+    let teamElements = [];
     for (let key in TEAM_LOC_MAP) {
       let stateElem = document.getElementById(TEAM_LOC_MAP[key]['svg-id']);
       if (stateElem == null) {
@@ -60,9 +63,14 @@ class Map extends Component {
       teamElements.push(<Node key={imgPath} top={rect.top} left={rect.left} offsetX={offsetX} offsetY={offsetY} imgpath={imgPath} />);
     }
 
+    // Dynamically adjust height and position of map
+    let mapContainer = document.getElementById('mapc');
+    let mapHeight = mapContainer == null ? 0 : mapContainer.offsetHeight;
+    let mapWidth = mapContainer == null ? 0 : mapContainer.offsetWidth;
+
     return (
-      <div className="map-container">
-        <MapSVG />
+      <div id="mapc" className="map-container">
+        {mapContainer && <MapSVG height={mapHeight} width={mapWidth} hasRendered={this.reRender}/>}
         {teamElements}
       </div>
     );

@@ -3,9 +3,13 @@ import './normalize.css';
 import './App.css';
 
 class MapSVG extends Component {
+  componentDidMount() {
+    this.props.hasRendered();
+  }
+
   render() {
     return (
-      <svg version="1.1" id="map"
+      <svg height={this.props.height} width={this.props.width} version="1.1" id="map"
       	 xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 1085.4 747.8">
       <g>
       	<g id="Canada">

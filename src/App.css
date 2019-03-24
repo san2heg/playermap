@@ -19,11 +19,6 @@
   margin: 20px;
 }
 
-#map {
-  height: 100%;
-  width: 100%;
-}
-
 .selector {
   display: flex;
   direction: row;
