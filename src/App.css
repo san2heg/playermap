@@ -35,11 +35,19 @@
   text-align: center;
 }
 
-.player-node {
-  width: 25px;
-  height: 25px;
-  background-color: red;
+.node {
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border-radius: 50%;
   position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.node-img {
+  width: 100%;
+  height: 100%;
 }
 
 .st0{

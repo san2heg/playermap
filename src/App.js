@@ -6,10 +6,16 @@ import './App.css';
 
 import MapSVG from './MapSVG.js';
 
-class PlayerNode extends Component {
+class Node extends Component {
   render() {
+    const style = {
+      transform: `translate(${this.props.left}px, ${this.props.top}px)`
+    };
+
     return (
-      <div style={{top: this.props.top, left: this.props.left}} className="player-node"></div>
+      <div style={style} className="node">
+        <img className="node-img" src={this.props.imgpath} />
+      </div>
     );
   }
 }
@@ -34,12 +40,22 @@ class Map extends Component {
   }
 
   render() {
-    let caElem = document.getElementById('US-CA');
+    let teamElements = [];
+    for (let key in TEAM_LOC_MAP) {
+      let stateElem = document.getElementById(TEAM_LOC_MAP[key]['svg-id']);
+      if (stateElem == null) {
+        break;
+      }
+      let rect = stateElem.getBoundingClientRect();
+      let imgPath = `/images/logos/${key}.svg`;
+
+      teamElements.push(<Node key={imgPath} top={rect.top} left={rect.left} imgpath={imgPath} />);
+    }
 
     return (
       <div className="map-container">
         <MapSVG />
-        {caElem && <PlayerNode top={caElem.getBoundingClientRect().top} left={caElem.getBoundingClientRect().left}/>}
+        {teamElements}
       </div>
     );
   }
