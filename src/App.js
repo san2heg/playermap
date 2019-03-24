@@ -1,11 +1,46 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
+import TEAM_LOC_MAP from './teamLocMap.js';
+import './normalize.css';
 import './App.css';
 
-class Map extends Component {
+import MapSVG from './MapSVG.js';
+
+class PlayerNode extends Component {
   render() {
     return (
-      <img id="map" src="images/us-canada-map.svg" />
+      <div style={{top: this.props.top, left: this.props.left}} className="player-node"></div>
+    );
+  }
+}
+
+class Map extends Component {
+  constructor(props) {
+    super(props);
+    this.onResize = this.onResize.bind(this);
+  }
+
+  componentDidMount() {
+    this.setState({state: this.state});
+    window.addEventListener('resize', this.onResize);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize);
+  }
+
+  onResize() {
+    this.setState({state: this.state});
+  }
+
+  render() {
+    let caElem = document.getElementById('US-CA');
+
+    return (
+      <div className="map-container">
+        <MapSVG />
+        {caElem && <PlayerNode top={caElem.getBoundingClientRect().top} left={caElem.getBoundingClientRect().left}/>}
+      </div>
     );
   }
 }
@@ -43,9 +78,7 @@ class App extends Component {
         <div className="title-container">
           <h1>NBA Player Map</h1>
         </div>
-        <div className="map-container">
-          <Map year={this.state.year}/>
-        </div>
+        <Map year={this.state.year}/>
         <div className="select-container">
           <YearSelector year={this.state.year} onYearChanged={this.adjustYear}/>
         </div>
