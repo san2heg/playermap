@@ -131,7 +131,9 @@ const TEAM_LOC_MAP = {
     'offset-y': 0.6
   },
   'TOR': {
-    'svg-id': 'CA-ON'
+    'svg-id': 'CA-ON',
+    'offset-x': 0.75,
+    'offset-y': 0.4
   },
   'UTA': {
     'svg-id': 'US-UT',
