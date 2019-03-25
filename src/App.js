@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import TEAM_LOC_MAP from './teamLocMap.js';
+import EasingFunctions from './easing.js';
 import './normalize.css';
 import './App.css';
 import axios from 'axios';
@@ -58,6 +59,9 @@ class Map extends Component {
   // 3. Nodes
   render() {
     console.log(`${this.props.prevYear} => ${this.props.year} - ${this.props.percentComplete}`);
+    // Ease percent complete
+    let easedPercent = EasingFunctions.easeInOutQuad(this.props.percentComplete);
+
     // Populate list of nodes representing each team
     let teamElements = [];
     for (let key in TEAM_LOC_MAP) {
@@ -81,7 +85,7 @@ class Map extends Component {
     let mapHeight = mapContainer == null ? 0 : mapContainer.offsetHeight;
     let mapWidth = mapContainer == null ? 0 : mapContainer.offsetWidth;
 
-    // Populate list of nodes representing players
+    // Populate list of nodes representing players in animated positions
     let playerElements = [];
     if (this.players != null) {
       let prevYearPlayers = this.players[this.props.prevYear];
@@ -101,8 +105,8 @@ class Map extends Component {
         let prevRect = prevStateElem.getBoundingClientRect();
         let nextRect = nextStateElem.getBoundingClientRect();
 
-        let topVal = prevRect.top + this.props.percentComplete * (nextRect.top - prevRect.top);
-        let leftVal = prevRect.left + this.props.percentComplete * (nextRect.left - prevRect.left);
+        let topVal = prevRect.top + easedPercent * (nextRect.top - prevRect.top);
+        let leftVal = prevRect.left + easedPercent * (nextRect.left - prevRect.left);
 
         let [nextXFrac, nextYFrac] = [TEAM_LOC_MAP[nextPlayer.team]['offset-x'], TEAM_LOC_MAP[nextPlayer.team]['offset-y']];
         let nextOffsetX = nextXFrac == null ? 0 : nextXFrac * nextRect.width;
@@ -111,8 +115,8 @@ class Map extends Component {
         let prevOffsetX = prevXFrac == null ? 0 : prevXFrac * prevRect.width;
         let prevOffsetY = prevYFrac == null ? 0 : prevYFrac * prevRect.height;
 
-        let offsetXVal = prevOffsetX + this.props.percentComplete * (nextOffsetX - prevOffsetX);
-        let offsetYVal = prevOffsetY + this.props.percentComplete * (nextOffsetY - prevOffsetY);
+        let offsetXVal = prevOffsetX + easedPercent * (nextOffsetX - prevOffsetX);
+        let offsetYVal = prevOffsetY + easedPercent * (nextOffsetY - prevOffsetY);
 
         let imgPath = `http://localhost:5000/headshots/${key}.jpg`;
         playerElements.push(<Node type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />);
@@ -177,7 +181,7 @@ class App extends Component {
       return;
     }
     this.setState(state => ({
-      percentComplete: state.percentComplete + 0.005
+      percentComplete: state.percentComplete + 0.002
     }));
   }
 
