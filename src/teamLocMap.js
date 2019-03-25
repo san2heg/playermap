@@ -4,7 +4,7 @@ const TEAM_LOC_MAP = {
     'offset-x': 0.3,
     'offset-y': 0.1
   },
-  'BKN': {
+  'BRK': {
     'svg-id': 'US-NY',
     'offset-x': 0.1,
     'offset-y': 0.4
@@ -14,7 +14,7 @@ const TEAM_LOC_MAP = {
     'offset-y': 0.4,
     'offset-x': 0.2
   },
-  'CHA': {
+  'CHO': {
     'svg-id': 'US-NC',
     'offset-x': 0.5,
     'offset-y': 0.1
@@ -94,7 +94,7 @@ const TEAM_LOC_MAP = {
   },
   'NYK': {
     'svg-id': 'US-NY',
-    'offset-x': 0.7  
+    'offset-x': 0.7
   },
   'OKC': {
     'svg-id': 'US-OK',
@@ -110,7 +110,7 @@ const TEAM_LOC_MAP = {
     'offset-x': 0.8,
     'offset-y': 0.2
   },
-  'PHX': {
+  'PHO': {
     'svg-id': 'US-AZ',
     'offset-x': 0.5,
     'offset-y': 0.3
@@ -144,6 +144,9 @@ const TEAM_LOC_MAP = {
     'svg-id': 'US-VA',
     'offset-x': 0.7,
     'offset-y': -0.1
+  },
+  'TOT': {
+    'svg-id': 'US-CA'
   }
 };
 
