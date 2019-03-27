@@ -15,7 +15,9 @@ class Node extends Component {
     const style = {
       transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px)`,
       borderColor: this.props.type == 'team' ? 'darkgray' : '#3895D3',
-      overflow: this.props.type == 'team' ? 'visible' : 'hidden'
+      overflow: this.props.type == 'team' ? 'visible' : 'hidden',
+      opacity: this.props.opacity,
+      zIndex: this.props.z == null ? 0 : this.props.z
     };
 
     return (
@@ -36,6 +38,7 @@ class Map extends Component {
     axios.get('http://localhost:5000/players/all')
       .then(res => {
         this.players = res.data;
+        this.rankingsLength = Object.keys(this.players['1974']).length;
         this.reRender();
       });
   }
@@ -91,7 +94,7 @@ class Map extends Component {
       let prevYearPlayers = this.players[this.props.prevYear];
       let nextYearPlayers = this.players[this.props.year];
       for (let key in nextYearPlayers) {
-        let prevPlayer = prevYearPlayers[key]; // null if player is not in next year rankings
+        let prevPlayer = prevYearPlayers[key]; // null if player is not in prev year rankings
         let nextPlayer = nextYearPlayers[key];
 
         if (TEAM_LOC_MAP[nextPlayer.team] == null) continue;
@@ -118,8 +121,10 @@ class Map extends Component {
         let offsetXVal = prevOffsetX + easedPercent * (nextOffsetX - prevOffsetX);
         let offsetYVal = prevOffsetY + easedPercent * (nextOffsetY - prevOffsetY);
 
+        let opacityVal = prevPlayer != null ? 1 : this.props.percentComplete * 1.0;
+
         let imgPath = `http://localhost:5000/headshots/${key}.jpg`;
-        playerElements.push(<Node type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />);
+        playerElements.push(<Node z={this.rankingsLength - nextPlayer.rank} opacity={opacityVal} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />);
       }
     }
 
@@ -167,7 +172,7 @@ class App extends Component {
         prevYear: state.year,
         percentComplete: 0
       }));
-      this.timerIDs.push(setInterval(this.animate, 1));
+      this.timerIDs.push(setInterval(this.animate, 16));
     }
   }
 
@@ -181,7 +186,7 @@ class App extends Component {
       return;
     }
     this.setState(state => ({
-      percentComplete: state.percentComplete + 0.002
+      percentComplete: state.percentComplete + 0.005
     }));
   }
 
