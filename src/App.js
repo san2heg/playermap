@@ -61,7 +61,7 @@ class Map extends Component {
   // 2. MapSVG
   // 3. Nodes
   render() {
-    console.log(`${this.props.prevYear} => ${this.props.year} - ${this.props.percentComplete}`);
+    // console.log(`${this.props.prevYear} => ${this.props.year} - ${this.props.percentComplete}`);
     // Ease percent complete
     let easedPercent = EasingFunctions.easeInOutQuad(this.props.percentComplete);
 
@@ -171,20 +171,20 @@ class App extends Component {
         year: tempYear,
         prevYear: state.year,
         percentComplete: 0
-      }));
-      this.timerIDs.push(setInterval(this.animate, 16));
+      }), () => this.animate());
     }
   }
 
-  // Maintain animation state
+  // Animate one frame and use rAF to start the next frame until completion
   animate() {
     if (this.state.percentComplete >= 1) {
       this.setState({
         percentComplete: 1
       });
-      clearInterval(this.timerIDs.pop());
+      cancelAnimationFrame(this.request);
       return;
     }
+    this.request = requestAnimationFrame(this.animate);
     this.setState(state => ({
       percentComplete: state.percentComplete + 0.005
     }));
