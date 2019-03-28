@@ -11,7 +11,6 @@ import MapSVG from './MapSVG.js';
 class Node extends Component {
   render() {
     // Apply translation transformations with offset
-    let translateStr = `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px)`;
     const style = {
       transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px) scale(${this.props.scale ? this.props.scale : 1}, ${this.props.scale ? this.props.scale : 1})`,
       borderColor: this.props.type == 'team' ? 'darkgray' : '#3895D3',
@@ -20,7 +19,7 @@ class Node extends Component {
     };
 
     return (
-      <div style={style} className="node">
+      <div id={this.props.id} style={style} className="node">
         {this.props.topLabel && <div className="node-toplabel">{this.props.topLabel}</div>}
         {this.props.bottomLabel && <div style={{opacity: this.props.bottomLabelOpacity}} className="node-bottomlabel">{this.props.bottomLabel}</div>}
         <div className="node-img-crop">
@@ -35,14 +34,6 @@ class Map extends Component {
   constructor(props) {
     super(props);
     this.reRender = this.reRender.bind(this);
-
-    // Fetch player rankings
-    axios.get('http://localhost:5000/players/all')
-      .then(res => {
-        this.players = res.data;
-        this.rankingsLength = Object.keys(this.players['1974']).length;
-        this.reRender();
-      });
   }
 
   componentDidMount() {
@@ -63,9 +54,7 @@ class Map extends Component {
   // 2. MapSVG
   // 3. Nodes
   render() {
-    // console.log(`${this.props.prevYear} => ${this.props.year} - ${this.props.percentComplete}`);
-    // Ease percent complete
-    let easedPercent = EasingFunctions.easeInOutQuad(this.props.percentComplete);
+    console.log(`${this.props.prevYear} => ${this.props.year}`);
 
     // Populate list of nodes representing each team
     let teamElements = [];
@@ -82,7 +71,7 @@ class Map extends Component {
       let offsetX = xFrac == null ? 0 : xFrac * rect.width;
       let offsetY = yFrac == null ? 0 : yFrac * rect.height;
 
-      teamElements.push(<Node topLabel={key} type='team' key={key} top={rect.top} left={rect.left} offsetX={offsetX} offsetY={offsetY} imgpath={imgPath} />);
+      teamElements.push(<Node id={key} topLabel={key} type='team' key={key} top={rect.top} left={rect.left} offsetX={offsetX} offsetY={offsetY} imgpath={imgPath} />);
     }
 
     // Dynamically adjust height and position of map
@@ -92,45 +81,27 @@ class Map extends Component {
 
     // Populate list of nodes representing players in animated positions
     let playerElements = [];
-    if (this.players != null) {
-      let prevYearPlayers = this.players[this.props.prevYear];
-      let nextYearPlayers = this.players[this.props.year];
-      for (let key in nextYearPlayers) {
-        let prevPlayer = prevYearPlayers[key]; // null if player is not in prev year rankings
-        let nextPlayer = nextYearPlayers[key];
-        let teamsChanged = prevPlayer == null ? false : prevPlayer.team != nextPlayer.team;
+    if (this.props.players != null) {
+      for (let key of this.props.playerOrder) {
+        let player = this.props.players[key];
 
-        if (TEAM_LOC_MAP[nextPlayer.team] == null) continue;
+        // If team not found, skip player
+        if (TEAM_LOC_MAP[player.team] == null) continue;
 
-        let nextStateElem = document.getElementById(TEAM_LOC_MAP[nextPlayer.team]['svg-id']);
-        let prevStateElem = prevPlayer == null ? nextStateElem : document.getElementById(TEAM_LOC_MAP[prevPlayer.team]['svg-id']);
+        let stateElem = document.getElementById(TEAM_LOC_MAP[player.team]['svg-id']);
+        if (stateElem == null) break;
 
-        if (prevStateElem == null || nextStateElem == null) {
-          break;
-        }
-        let prevRect = prevStateElem.getBoundingClientRect();
-        let nextRect = nextStateElem.getBoundingClientRect();
+        // Compute next top and left values
+        let rect = stateElem.getBoundingClientRect();
+        let [topVal, leftVal] = [rect.top, rect.left];
 
-        let topVal = prevRect.top + easedPercent * (nextRect.top - prevRect.top);
-        let leftVal = prevRect.left + easedPercent * (nextRect.left - prevRect.left);
+        // Compute next offset values
+        let [xFrac, yFrac] = [TEAM_LOC_MAP[player.team]['offset-x'], TEAM_LOC_MAP[player.team]['offset-y']];
+        let [offsetXVal, offsetYVal] = [xFrac == null ? 0 : xFrac * rect.width, yFrac == null ? 0 : yFrac * rect.height];
 
-        let [nextXFrac, nextYFrac] = [TEAM_LOC_MAP[nextPlayer.team]['offset-x'], TEAM_LOC_MAP[nextPlayer.team]['offset-y']];
-        let nextOffsetX = nextXFrac == null ? 0 : nextXFrac * nextRect.width;
-        let nextOffsetY = nextYFrac == null ? 0 : nextYFrac * nextRect.height;
-        let [prevXFrac, prevYFrac] = prevPlayer == null ? [nextXFrac, nextYFrac] : [TEAM_LOC_MAP[prevPlayer.team]['offset-x'], TEAM_LOC_MAP[prevPlayer.team]['offset-y']];
-        let prevOffsetX = prevXFrac == null ? 0 : prevXFrac * prevRect.width;
-        let prevOffsetY = prevYFrac == null ? 0 : prevYFrac * prevRect.height;
-
-        let offsetXVal = prevOffsetX + easedPercent * (nextOffsetX - prevOffsetX);
-        let offsetYVal = prevOffsetY + easedPercent * (nextOffsetY - prevOffsetY);
-
-        let opacityVal = prevPlayer != null ? 1 : this.props.percentComplete * 1.0;
-
-        let bottomLabelOpacityVal = !teamsChanged ? 0 : -1*(2*this.props.percentComplete-1)*(2*this.props.percentComplete-1)+1;
-        let scaleVal = !teamsChanged ? 1 : -0.5*(2*this.props.percentComplete-1)*(2*this.props.percentComplete-1)+1.5;
-
+        // Push new player node with corresponding headshot image
         let imgPath = `http://localhost:5000/headshots/${key}.jpg`;
-        playerElements.push(<Node scale={scaleVal} bottomLabelOpacity={bottomLabelOpacityVal} bottomLabel={nextPlayer.fullname} z={this.rankingsLength - nextPlayer.rank} opacity={opacityVal} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />);
+        playerElements.push(<Node id={key} scale={1} bottomLabelOpacity={1} bottomLabel={player.fullname} z={this.rankingsLength - player.rank} opacity={1} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />)
       }
     }
 
@@ -162,38 +133,55 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.currYear = new Date().getFullYear();
-    this.state = {prevYear: this.currYear, year: this.currYear, percentComplete: 1.0};
-    this.timerIDs = [];
+    this.state = {year: this.currYear, prevYear: this.currYear, currPlayers: null};
+
+    // Fetch player rankings and update state
+    axios.get('http://localhost:5000/players/all')
+      .then(res => {
+        this.players = res.data;
+        this.rankingsLength = Object.keys(this.players['1974']).length;
+        this.setState(state => ({
+          playerOrder: Object.keys(this.players[state.year]),
+        }));
+      });
 
     this.adjustYear = this.adjustYear.bind(this);
-    this.animate = this.animate.bind(this);
+  }
+
+  // Match player orderings to ensure functioning CSS transitions
+  nextPlayerOrder(prevOrder, nextOrder, nextPlayers) {
+    let orderedPlayers = [];
+    let overlapList = [];
+    for (let key of prevOrder) {
+      if (key in nextPlayers) {
+        orderedPlayers.push(key);
+        overlapList.push(key);
+      } else {
+        orderedPlayers.push(null);
+      }
+    }
+
+    let newPlayers = nextOrder.filter((e) => !overlapList.includes(e));
+
+    for (let i=0; i < orderedPlayers.length; i++) {
+      if (orderedPlayers[i] == null) {
+        orderedPlayers[i] = newPlayers.pop();
+      }
+    }
+
+    return orderedPlayers;
   }
 
   // Adjust year with offset value
   adjustYear(offset) {
     let tempYear = this.state.year + offset;
-    if (tempYear >= 1974 && tempYear <= this.currYear) {
+    if (tempYear >= 1974 && tempYear <= this.currYear && this.players != null) {
       this.setState(state => ({
         year: tempYear,
         prevYear: state.year,
-        percentComplete: 0
-      }), () => this.animate());
+        playerOrder: this.nextPlayerOrder(state.playerOrder, Object.keys(this.players[tempYear]), this.players[tempYear])
+      }));
     }
-  }
-
-  // Animate one frame and use rAF to start the next frame until completion
-  animate() {
-    if (this.state.percentComplete >= 1) {
-      this.setState({
-        percentComplete: 1
-      });
-      cancelAnimationFrame(this.request);
-      return;
-    }
-    this.request = requestAnimationFrame(this.animate);
-    this.setState(state => ({
-      percentComplete: state.percentComplete + 0.003
-    }));
   }
 
   render() {
@@ -202,7 +190,7 @@ class App extends Component {
         <div className="title-container">
           <h1>NBA Player Map</h1>
         </div>
-        <Map year={this.state.year} year={this.state.year} prevYear={this.state.prevYear} percentComplete={this.state.percentComplete} />
+        <Map year={this.state.year} prevYear={this.state.prevYear} playerOrder={this.state.playerOrder} players={this.players == null ? null : this.players[this.state.year]} />
         <div className="select-container">
           <YearSelector year={this.state.year} onYearChanged={this.adjustYear}/>
         </div>

@@ -43,8 +43,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  /* transition: transform 2s, width 0.5s, height 0.5s, margin-left 0.5s, margin-top 0.5s; */
-  transition: width 0.5s, height 0.5s, margin-left 0.5s, margin-top 0.5s;
+  transition: width 0.5s, height 0.5s, margin-left 0.5s, margin-top 0.5s, transform 4s;
 }
 
 .node-img-crop {
