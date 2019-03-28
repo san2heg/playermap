@@ -13,17 +13,19 @@ class Node extends Component {
     // Apply translation transformations with offset
     let translateStr = `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px)`;
     const style = {
-      transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px)`,
+      transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px) scale(${this.props.scale ? this.props.scale : 1}, ${this.props.scale ? this.props.scale : 1})`,
       borderColor: this.props.type == 'team' ? 'darkgray' : '#3895D3',
-      overflow: this.props.type == 'team' ? 'visible' : 'hidden',
       opacity: this.props.opacity,
       zIndex: this.props.z == null ? 0 : this.props.z
     };
 
     return (
       <div style={style} className="node">
-        {this.props.label && <div className="node-label">{this.props.label}</div>}
-        <img className="node-img" src={this.props.imgpath} />
+        {this.props.topLabel && <div className="node-toplabel">{this.props.topLabel}</div>}
+        {this.props.bottomLabel && <div style={{opacity: this.props.bottomLabelOpacity}} className="node-bottomlabel">{this.props.bottomLabel}</div>}
+        <div className="node-img-crop">
+          <img className="node-img" src={this.props.imgpath} />
+        </div>
       </div>
     );
   }
@@ -80,7 +82,7 @@ class Map extends Component {
       let offsetX = xFrac == null ? 0 : xFrac * rect.width;
       let offsetY = yFrac == null ? 0 : yFrac * rect.height;
 
-      teamElements.push(<Node label={key} type='team' key={key} top={rect.top} left={rect.left} offsetX={offsetX} offsetY={offsetY} imgpath={imgPath} />);
+      teamElements.push(<Node topLabel={key} type='team' key={key} top={rect.top} left={rect.left} offsetX={offsetX} offsetY={offsetY} imgpath={imgPath} />);
     }
 
     // Dynamically adjust height and position of map
@@ -96,6 +98,7 @@ class Map extends Component {
       for (let key in nextYearPlayers) {
         let prevPlayer = prevYearPlayers[key]; // null if player is not in prev year rankings
         let nextPlayer = nextYearPlayers[key];
+        let teamsChanged = prevPlayer == null ? false : prevPlayer.team != nextPlayer.team;
 
         if (TEAM_LOC_MAP[nextPlayer.team] == null) continue;
 
@@ -123,8 +126,11 @@ class Map extends Component {
 
         let opacityVal = prevPlayer != null ? 1 : this.props.percentComplete * 1.0;
 
+        let bottomLabelOpacityVal = !teamsChanged ? 0 : -1*(2*this.props.percentComplete-1)*(2*this.props.percentComplete-1)+1;
+        let scaleVal = !teamsChanged ? 1 : -0.5*(2*this.props.percentComplete-1)*(2*this.props.percentComplete-1)+1.5;
+
         let imgPath = `http://localhost:5000/headshots/${key}.jpg`;
-        playerElements.push(<Node z={this.rankingsLength - nextPlayer.rank} opacity={opacityVal} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />);
+        playerElements.push(<Node scale={scaleVal} bottomLabelOpacity={bottomLabelOpacityVal} bottomLabel={nextPlayer.fullname} z={this.rankingsLength - nextPlayer.rank} opacity={opacityVal} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />);
       }
     }
 
@@ -186,7 +192,7 @@ class App extends Component {
     }
     this.request = requestAnimationFrame(this.animate);
     this.setState(state => ({
-      percentComplete: state.percentComplete + 0.005
+      percentComplete: state.percentComplete + 0.003
     }));
   }
 
