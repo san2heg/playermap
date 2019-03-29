@@ -5,25 +5,33 @@ import EasingFunctions from './easing.js';
 import './normalize.css';
 import './App.css';
 import axios from 'axios';
+import {
+  CSSTransition,
+  TransitionGroup,
+} from 'react-transition-group';
 
 import MapSVG from './MapSVG.js';
 
 class Node extends Component {
   render() {
     // Apply translation transformations with offset
-    const style = {
+    const translateStyle = {
       transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px) scale(${this.props.scale ? this.props.scale : 1}, ${this.props.scale ? this.props.scale : 1})`,
-      borderColor: this.props.type == 'team' ? 'darkgray' : '#3895D3',
-      opacity: this.props.opacity,
       zIndex: this.props.z == null ? 0 : this.props.z
     };
 
+    const style = {
+      borderColor: this.props.type == 'team' ? 'darkgray' : '#3895D3'
+    };
+
     return (
-      <div id={this.props.id} style={style} className="node">
+      <div id={this.props.id} style={translateStyle} className="node">
         {this.props.topLabel && <div className="node-toplabel">{this.props.topLabel}</div>}
-        {this.props.bottomLabel && <div style={{opacity: this.props.bottomLabelOpacity}} className="node-bottomlabel">{this.props.bottomLabel}</div>}
-        <div className="node-img-crop">
-          <img className="node-img" src={this.props.imgpath} />
+        {this.props.bottomLabel && <div style={{opacity: 0}} className="node-bottomlabel">{this.props.bottomLabel}</div>}
+        <div style={style} className="node-style">
+          <div className="node-img-crop">
+            <img className="node-img" src={this.props.imgpath} />
+          </div>
         </div>
       </div>
     );
@@ -101,7 +109,14 @@ class Map extends Component {
 
         // Push new player node with corresponding headshot image
         let imgPath = `http://localhost:5000/headshots/${key}.jpg`;
-        playerElements.push(<Node id={key} scale={1} bottomLabelOpacity={1} bottomLabel={player.fullname} z={this.rankingsLength - player.rank} opacity={1} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />)
+        playerElements.push((
+          <CSSTransition
+            key={key}
+            timeout={500}
+            classNames="player">
+            <Node id={key} scale={1} bottomLabelOpacity={1} bottomLabel={player.fullname} z={50 - player.rank} opacity={1} type='player' key={key} top={topVal} left={leftVal} offsetX={offsetXVal} offsetY={offsetYVal} imgpath={imgPath} />
+          </CSSTransition>
+        ))
       }
     }
 
@@ -109,7 +124,9 @@ class Map extends Component {
       <div id="mapc" className="map-container">
         {mapContainer && <MapSVG height={mapHeight} width={mapWidth} hasRendered={this.reRender}/>}
         {teamElements}
-        {playerElements}
+        <TransitionGroup>
+          {playerElements}
+        </TransitionGroup>
       </div>
     );
   }
