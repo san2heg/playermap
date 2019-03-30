@@ -17,7 +17,7 @@ class Node extends Component {
     // Apply translation transformations with offset
     const translateStyle = {
       transform: `translate(${this.props.left + this.props.offsetX}px, ${this.props.top + this.props.offsetY}px) scale(${this.props.scale ? this.props.scale : 1}, ${this.props.scale ? this.props.scale : 1})`,
-      zIndex: this.props.z == null ? 0 : (this.props.active ? 999 : this.props.z),
+      zIndex: this.props.z == null ? 0 : this.props.z,
     };
 
     const style = {
@@ -38,7 +38,7 @@ class Node extends Component {
         {this.props.bottomLabel && <div className="node-bottomlabel">{this.props.bottomLabel}</div>}
         <div style={style} className="node-style">
           <div className="node-img-crop">
-            <img className="node-img" src={this.props.imgpath} />
+            <img style={{width: this.props.scaleDown ? '70%' : '100%'}} className={this.props.type == 'team' ? 'node-img-team' : 'node-img-player'} src={this.props.imgpath} />
           </div>
         </div>
       </div>
@@ -71,32 +71,53 @@ class Map extends Component {
   // 3. Nodes
   render() {
     console.log(`${this.props.prevYear} => ${this.props.year} - animating: ${this.props.animActive}`);
+    console.log(this.props.changeMap);
 
     // Populate list of nodes representing each team
     let teamElements = [];
     for (let key in TEAM_LOC_MAP) {
-      let stateElem = document.getElementById(TEAM_LOC_MAP[key]['svg-id']);
-      if (stateElem == null) {
-        break;
-      }
-      let rect = stateElem.getBoundingClientRect();
-      let imgPath = `/images/logos/${key}.svg`;
+      let teamObj = TEAM_LOC_MAP[key];
 
-      let [xFrac, yFrac] = [TEAM_LOC_MAP[key]['offset-x'], TEAM_LOC_MAP[key]['offset-y']];
+      // Check if current year is within team range
+      if (teamObj['range'] != undefined && (this.props.year < teamObj['range'][0] || this.props.year > teamObj['range'][1])) continue;
+
+      let stateElem, xFrac, yFrac;
+      if (teamObj['alias'] != undefined) {
+        let alias = teamObj['alias'];
+        stateElem = document.getElementById(TEAM_LOC_MAP[alias]['svg-id']);
+        [xFrac, yFrac] = [TEAM_LOC_MAP[alias]['offset-x'], TEAM_LOC_MAP[alias]['offset-y']]
+      } else {
+        stateElem = document.getElementById(teamObj['svg-id']);
+        [xFrac, yFrac] = [teamObj['offset-x'], teamObj['offset-y']];
+      }
+
+      if (stateElem == null) break;
+
+      let rect = stateElem.getBoundingClientRect();
+      let imgPath = `/images/logos/${key}.`;
+      imgPath += teamObj['img-type'] == undefined ? 'svg' : teamObj['img-type'];
 
       let offsetX = xFrac == null ? 0 : xFrac * rect.width;
       let offsetY = yFrac == null ? 0 : yFrac * rect.height;
 
-      teamElements.push((<Node id={key}
-                            animActive={this.props.animActive}
-                            topLabel={key}
-                            type='team'
-                            key={key}
-                            top={rect.top}
-                            left={rect.left}
-                            offsetX={offsetX}
-                            offsetY={offsetY}
-                            imgpath={imgPath} />));
+      teamElements.push((
+        <CSSTransition
+          key={key}
+          timeout={500}
+          classNames="node">
+          <Node id={key}
+            active={false}
+            animActive={this.props.animActive}
+            topLabel={key}
+            type='team'
+            key={key}
+            top={rect.top}
+            left={rect.left}
+            offsetX={offsetX}
+            offsetY={offsetY}
+            imgpath={imgPath}
+            scaleDown={teamObj['img-type'] != undefined} />
+        </CSSTransition>));
     }
 
     // Dynamically adjust height and position of map
@@ -109,11 +130,21 @@ class Map extends Component {
     if (this.props.players != null) {
       for (let key of this.props.playerOrder) {
         let player = this.props.players[key];
+        let teamObj = TEAM_LOC_MAP[player.team];
 
         // If team not found, skip player
-        if (TEAM_LOC_MAP[player.team] == null) continue;
+        if (teamObj == null) continue;
 
-        let stateElem = document.getElementById(TEAM_LOC_MAP[player.team]['svg-id']);
+        let stateElem, xFrac, yFrac;
+        if (teamObj['alias'] != undefined) {
+          let alias = teamObj['alias'];
+          stateElem = document.getElementById(TEAM_LOC_MAP[alias]['svg-id']);
+          [xFrac, yFrac] = [TEAM_LOC_MAP[alias]['offset-x'], TEAM_LOC_MAP[alias]['offset-y']]
+        } else {
+          stateElem = document.getElementById(teamObj['svg-id']);
+          [xFrac, yFrac] = [teamObj['offset-x'], teamObj['offset-y']];
+        }
+
         if (stateElem == null) break;
 
         // Compute next top and left values
@@ -121,7 +152,6 @@ class Map extends Component {
         let [topVal, leftVal] = [rect.top, rect.left];
 
         // Compute next offset values
-        let [xFrac, yFrac] = [TEAM_LOC_MAP[player.team]['offset-x'], TEAM_LOC_MAP[player.team]['offset-y']];
         let [offsetXVal, offsetYVal] = [xFrac == null ? 0 : xFrac * rect.width, yFrac == null ? 0 : yFrac * rect.height];
 
         // Push new player node with corresponding headshot image
@@ -131,7 +161,7 @@ class Map extends Component {
           <CSSTransition
             key={key}
             timeout={500}
-            classNames="player">
+            classNames="node">
             <Node
               id={key}
               active={changeActive}
@@ -154,7 +184,9 @@ class Map extends Component {
     return (
       <div id="mapc" className="map-container">
         {mapContainer && <MapSVG height={mapHeight} width={mapWidth} hasRendered={this.reRender}/>}
-        {teamElements}
+        <TransitionGroup>
+          {teamElements}
+        </TransitionGroup>
         <TransitionGroup>
           {playerElements}
         </TransitionGroup>
@@ -239,20 +271,23 @@ class App extends Component {
 
       // Set next state
       let [playerOrder, changeMap] = this.nextPlayerOrder(this.state.playerOrder, Object.keys(this.players[tempYear]), this.players[this.state.year], this.players[tempYear]);
+      let changeOccured = Object.keys(changeMap).length > 0;
       this.setState(state => ({
         year: tempYear,
         prevYear: state.year,
         playerOrder: playerOrder,
         changeMap: changeMap,
-        animActive: true
+        animActive: changeOccured ? true : false
       }));
 
       // Set animActive to false after animation time has elapsed
-      this.timerID = setTimeout(() => {
-        this.setState({
-          animActive: false
-        });
-      }, 4000);
+      if (changeOccured) {
+        this.timerID = setTimeout(() => {
+          this.setState({
+            animActive: false
+          });
+        }, 4000);
+      }
     }
   }
 

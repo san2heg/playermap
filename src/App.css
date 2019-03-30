@@ -63,6 +63,7 @@
   height: 100%;
   border-radius: 22%;
   overflow: hidden;
+  position: relative;
 }
 
 .node:hover .node-bottomlabel, .node.active .node-bottomlabel {
@@ -74,7 +75,17 @@
   transform: translate(-50%, -41px);
 }
 
-.node-img {
+.node-img-team {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  left: 0;
+  right: 0;
+}
+
+.node-img-player {
   width: 100%;
 }
 
@@ -116,17 +127,17 @@
 
 /* React Transition Group classes */
 
-.player-enter {
+.node-enter {
   opacity: 0;
 }
-.player-enter-active {
+.node-enter-active {
   opacity: 1;
   transition: opacity 500ms ease-in;
 }
-.player-exit {
+.node-exit {
   opacity: 1;
 }
-.player-exit-active {
+.node-exit-active {
   opacity: 0;
   transition: opacity 500ms ease-in;
 }
