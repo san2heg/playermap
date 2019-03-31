@@ -9,6 +9,7 @@ import {
   CSSTransition,
   TransitionGroup,
 } from 'react-transition-group';
+import ProgressiveImage from 'react-progressive-image';
 
 import MapSVG from './MapSVG.js';
 
@@ -38,7 +39,9 @@ class Node extends Component {
         {this.props.bottomLabel && <div className="node-bottomlabel">{this.props.bottomLabel}</div>}
         <div style={style} className="node-style">
           <div className="node-img-crop">
-            <img style={{width: this.props.scaleDown ? '70%' : '100%'}} className={this.props.type == 'team' ? 'node-img-team' : 'node-img-player'} src={this.props.imgpath} />
+            <ProgressiveImage src={this.props.imgpath} placeholder="/images/placeholder.svg">
+              {src => <img style={{width: this.props.scaleDown ? '70%' : '100%'}} className={this.props.type == 'team' ? 'node-img-team' : 'node-img-player'} src={src} />}
+            </ProgressiveImage>
           </div>
         </div>
       </div>
@@ -155,7 +158,7 @@ class Map extends Component {
         let [offsetXVal, offsetYVal] = [xFrac == null ? 0 : xFrac * rect.width, yFrac == null ? 0 : yFrac * rect.height];
 
         // Push new player node with corresponding headshot image
-        let imgPath = `http://localhost:5000/headshots/${key}.jpg`;
+        let imgPath = `/headshots/${key}.jpg`;
         let changeActive = key in this.props.changeMap && this.props.animActive;
         playerElements.push((
           <CSSTransition
@@ -216,7 +219,7 @@ class App extends Component {
     this.state = {year: this.currYear, prevYear: this.currYear, playerOrder: null, changeMap: null, animActive: false};
 
     // Fetch player rankings and update state
-    axios.get('http://localhost:5000/players/all')
+    axios.get('/players/all')
       .then(res => {
         this.players = res.data;
         this.rankingsLength = Object.keys(this.players['1974']).length;
