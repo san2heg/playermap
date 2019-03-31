@@ -199,11 +199,11 @@ class YearSelector extends Component {
   render() {
     return (
       <div className="selector">
-        <button type="button" onClick={this.props.onYearChanged.bind(this, -1)}>&#8592;</button>
+        <a className="selector-btn selector-btn-left" onClick={this.props.onYearChanged.bind(this, -1)}><img className="selector-btn-img" src="/images/left-arrow.svg" /></a>
         <div className="year-label">
           <div>{this.props.year}</div>
         </div>
-        <button type="button" onClick={this.props.onYearChanged.bind(this, 1)}>&#8594;</button>
+        <a className="selector-btn selector-btn-right" onClick={this.props.onYearChanged.bind(this, 1)}><img className="selector-btn-img" src="/images/right-arrow.svg" /></a>
       </div>
     );
   }
