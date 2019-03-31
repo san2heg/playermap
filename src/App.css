@@ -9,6 +9,18 @@
   height: 100vh;
 }
 
+.title-header {
+  font-size: 30px;
+  padding-top: 20px;
+  font-weight: 500;
+}
+
+.title-subheader {
+  padding-top: 8px;
+  padding-bottom: 5px;
+  font-size: 12px;
+}
+
 .map-container {
   margin: 20px;
   overflow: hidden;

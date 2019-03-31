@@ -295,7 +295,8 @@ class App extends Component {
     return (
       <div className="container">
         <div className="title-container">
-          <h1>NBA Player Map</h1>
+          <div className="title-header">NBA Player Map</div>
+          <div className="title-subheader">Made by Sanketh Hegde &copy; 2019</div>
         </div>
         <Map animActive={this.state.animActive} changeMap={this.state.changeMap} year={this.state.year} prevYear={this.state.prevYear} playerOrder={this.state.playerOrder} players={this.players == null ? null : this.players[this.state.year]} />
         <div className="select-container">
